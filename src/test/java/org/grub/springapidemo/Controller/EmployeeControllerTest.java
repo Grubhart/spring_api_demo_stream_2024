@@ -10,7 +10,6 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -23,7 +22,7 @@ public class EmployeeControllerTest {
     private TestRestTemplate restTemplate;
 
     @Test
-    void getAllEmployeesTestOkResponse() throws Exception {
+    void getAllEmployeesTestOkResponse()  {
 
         ResponseEntity<EntityModel> response =  restTemplate.getForEntity("http://localhost:" + port +
                 "/employees", EntityModel.class);
@@ -32,11 +31,19 @@ public class EmployeeControllerTest {
 
 
     @Test
-    void getEmployeeNotFoundStsatusCode404() throws Exception {
+    void getEmployeeNotFoundStsatusCode404()  {
+
+        ResponseEntity<String> response =  restTemplate.getForEntity("http://localhost:" + port +
+                "/employees/400", String.class);
+        assertEquals(HttpStatusCode.valueOf(404), response.getStatusCode());
+    }
+
+    @Test
+    void getEmployeeFoundStsatusCode200()  {
 
         ResponseEntity<EntityModel> response =  restTemplate.getForEntity("http://localhost:" + port +
-                "/employees/400", EntityModel.class);
-        assertEquals(HttpStatusCode.valueOf(404), response.getStatusCode());
+                "/employees/1", EntityModel.class);
+        assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
     }
 
 }
