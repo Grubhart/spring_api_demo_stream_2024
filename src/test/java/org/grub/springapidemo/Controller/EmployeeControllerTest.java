@@ -4,9 +4,7 @@ package org.grub.springapidemo.Controller;
 import org.grub.springapidemo.domain.Employee;
 import org.grub.springapidemo.repository.EmployeeRepository;
 import org.grub.springapidemo.repository.EmployeeRepositoryTestUtil;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -14,6 +12,10 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -33,9 +35,21 @@ public class EmployeeControllerTest {
     private EmployeeRepositoryTestUtil testUtil;
 
 
+    static  DockerImageName mysqlImage = DockerImageName.parse("container-registry.oracle.com/mysql/community-server:latest").asCompatibleSubstituteFor("mysql");
+
+
+    static MySQLContainer<?> mySQL = new MySQLContainer<>(mysqlImage);
+
+    @BeforeAll
+    static void setUpBeforeClass() throws Exception {
+        mySQL.start();
+
+    }
+
     @BeforeEach
     void setUp() {
         // inicializar BD
+
         employeeRepository.save(new Employee("Bilbo Baggins", "burglar"));
         employeeRepository.save(new Employee("Frodo Baggins", "thief"));
 
@@ -47,6 +61,20 @@ public class EmployeeControllerTest {
         testUtil.resetIdentity();
 
     }
+
+    @AfterAll
+    static void tearDownAll() {
+        mySQL.stop();
+    }
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", mySQL::getJdbcUrl);
+        registry.add("spring.datasource.username", mySQL::getUsername);
+        registry.add("spring.datasource.password", mySQL::getPassword);
+    }
+
+
 
     @Test
     void getAllEmployeesTestOkResponse()  {
